@@ -1,5 +1,6 @@
 package de.nicokuchling.tacocloud.tacos.data;
 
+import de.nicokuchling.tacocloud.tacos.Ingredient;
 import de.nicokuchling.tacocloud.tacos.Taco;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,6 +29,10 @@ public class JdbcTacoRepository implements TacoRepository {
     @Override
     public Taco save(Taco taco) {
         long tacoId = saveTacoInfo(taco);
+        taco.setId(tacoId);
+        for (Ingredient ingredient : taco.getIngredients()) {
+            saveIngredientToTaco(ingredient, tacoId);
+        }
 
         return taco;
     }
@@ -48,5 +53,12 @@ public class JdbcTacoRepository implements TacoRepository {
         jdbc.update(psc, keyHolder);
 
         return Objects.requireNonNull(keyHolder.getKey()).longValue();
+    }
+
+    private void saveIngredientToTaco(Ingredient ingredient, long tacoId) {
+        jdbc.update(
+                "insert into Taco_Ingredients (taco, ingredient) " +
+                    "values (?, ?)",
+                tacoId, ingredient.getId());
     }
 }
